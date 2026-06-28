@@ -128,6 +128,8 @@ export const collections = {
 
 `src/content/docs/index.mdx` 会变成 `/`。例如 `src/content/docs/zh-cn/index.mdx` 会变成 `/zh-cn/`。
 
+当 `defaultLocale` 不是 `root` 时，默认语言目录会被视为根路径。例如 `defaultLocale: 'zh-cn'` 时，`src/content/docs/zh-cn/index.mdx` 会变成 `/`，`src/content/docs/zh-cn/guide.mdx` 会变成 `/guide/`。
+
 ## 配置
 
 ### 主题和元信息
@@ -255,6 +257,17 @@ vela({
 ```
 
 内置 UI 文案包含英文、中文、日文、韩文、法文、德文、西班牙文、葡萄牙文、俄文、意大利文和阿拉伯文。缺少的 key 会回退到内置语言，再回退到英文。
+
+单语言站点直接把 `defaultLocale` 设置成该语言，并只定义一个 locale：
+
+```js
+vela({
+  defaultLocale: 'zh-cn',
+  locales: {
+    'zh-cn': { label: '简体中文', lang: 'zh-CN' },
+  },
+})
+```
 
 ### 搜索、版本和编辑链接
 

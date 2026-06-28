@@ -128,6 +128,8 @@ export const collections = {
 
 `src/content/docs/index.mdx` becomes `/`. Locale folders such as `src/content/docs/zh-cn/index.mdx` become `/zh-cn/`.
 
+When `defaultLocale` is not `root`, the default locale folder is treated as the root URL. For example, with `defaultLocale: 'zh-cn'`, `src/content/docs/zh-cn/index.mdx` becomes `/`, and `src/content/docs/zh-cn/guide.mdx` becomes `/guide/`.
+
 ## Configuration
 
 ### Theme and Metadata
@@ -255,6 +257,17 @@ vela({
 ```
 
 Built-in UI strings include English, Chinese, Japanese, Korean, French, German, Spanish, Portuguese, Russian, Italian, and Arabic. Missing keys fall back to the built-in locale and then English.
+
+For single-language sites, set `defaultLocale` to that language code and define only one locale:
+
+```js
+vela({
+  defaultLocale: 'zh-cn',
+  locales: {
+    'zh-cn': { label: '简体中文', lang: 'zh-CN' },
+  },
+})
+```
 
 ### Search, Versions, and Edit Links
 

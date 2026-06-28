@@ -134,6 +134,11 @@ export function isActiveHref(href: string, currentPath: string, exact = false): 
   return current === target || (target !== '/' && current.startsWith(`${target}/`))
 }
 
+export function isCurrentHref(href: string, currentPath: string): boolean {
+  if (isExternalHref(href)) return false
+  return normalizePath(currentPath) === normalizePath(href)
+}
+
 export function selectDoc(docs: VelaDocsConfig | undefined, ctx: VelaLocaleContext): VelaDocConfig | undefined {
   if (!docs) return undefined
   const path = contentPath(ctx)
@@ -163,7 +168,7 @@ function resolveSidebarItem(item: VelaSidebarItem, ctx: VelaLocaleContext): Vela
   if (typeof item === 'string') {
     const label = titleFromSlug(item)
     const href = localizedSlug(item, ctx)
-    return [{ type: 'link', label, href, isCurrent: isActiveHref(href, ctx.currentPath, item === ''), attrs: {} }]
+    return [{ type: 'link', label, href, isCurrent: isCurrentHref(href, ctx.currentPath), attrs: {} }]
   }
 
   if ('type' in item && item.type === 'link') {
@@ -173,7 +178,7 @@ function resolveSidebarItem(item: VelaSidebarItem, ctx: VelaLocaleContext): Vela
         label: item.label,
         href: item.href,
         attrs: item.attrs ?? {},
-        isCurrent: item.isCurrent ?? isActiveHref(item.href, ctx.currentPath),
+        isCurrent: item.isCurrent ?? isCurrentHref(item.href, ctx.currentPath),
       },
     ]
   }
@@ -203,14 +208,13 @@ function resolveSidebarItem(item: VelaSidebarItem, ctx: VelaLocaleContext): Vela
   if ('autogenerate' in item) return []
 
   const href = hrefForLink(item, ctx)
-  const exact = item.slug === '' || item.link === '' || item.href === ''
   return [
     {
       type: 'link',
       label: labelFor(item, ctx) || titleFromSlug(item.slug || item.link || item.href || ''),
       href,
       attrs: item.attrs ?? {},
-      isCurrent: isActiveHref(href, ctx.currentPath, exact),
+      isCurrent: isCurrentHref(href, ctx.currentPath),
     },
   ]
 }

@@ -1,6 +1,6 @@
 {
   "name": "@duxweb/vela",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A clean Astro documentation framework for Dux projects.",
   "type": "module",
   "main": "./dist/index.js",
@@ -28,7 +28,7 @@
     "build": "node scripts/build.mjs && tsc -p tsconfig.build.json",
     "check": "tsc --noEmit",
     "prepack": "pnpm build",
-    "build:example": "pnpm --dir examples/basic build"
+    "build:example": "pnpm --dir examples/basic build && pnpm --dir examples/basic-single build"
   },
   "peerDependencies": {
     "astro": ">=7.0.0"

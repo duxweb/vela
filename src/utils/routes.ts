@@ -30,7 +30,7 @@ export function entryPath(entry: VelaDocEntry): string {
 }
 
 export function routePathFromEntry(entry: VelaDocEntry): string {
-  return entryPath(entry)
+  return publicPathFromContentPath(entryPath(entry))
 }
 
 export function currentRouteContext(pathname: string): VelaRouteContext {
@@ -71,7 +71,7 @@ export function alternateUrlForLocale(currentSlug: string, locale: string): stri
 }
 
 export function localizedUrl(slug: string): string {
-  const clean = normalizeSlug(slug)
+  const clean = publicPathFromContentPath(normalizeSlug(slug))
   const base = baseUrl
   const prefix = base === '/' ? '' : base.replace(/\/+$/, '')
   return clean ? `${prefix}/${clean}/` : `${prefix ? `${prefix}/` : '/'}`
@@ -86,6 +86,14 @@ export function assetUrl(path: string): string {
 
 export function stripLocaleFromContentPath(contentPath: string, locale: string): string {
   return stripLocaleSlug(contentPath, locale)
+}
+
+export function publicPathFromContentPath(contentPath: string): string {
+  const clean = normalizeSlug(contentPath)
+  if (!clean || config.defaultLocale === 'root') return clean
+  if (clean === config.defaultLocale) return ''
+  if (clean.startsWith(`${config.defaultLocale}/`)) return clean.slice(config.defaultLocale.length + 1)
+  return clean
 }
 
 export function canonicalUrl(pathname: string, site?: URL): string | undefined {
