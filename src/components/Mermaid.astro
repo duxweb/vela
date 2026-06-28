@@ -1,0 +1,53 @@
+---
+---
+
+<script>
+  const prepareBlocks = () => {
+    const blocks = Array.from(document.querySelectorAll('pre > code.language-mermaid, pre > code.mermaid'))
+    for (const block of blocks) {
+      if (!(block instanceof HTMLElement) || block.dataset.mermaidRendered === 'true') continue
+      const pre = block.parentElement
+      if (!pre) continue
+      const source = block.textContent ?? ''
+      const container = document.createElement('div')
+      container.className = 'vela-mermaid'
+      container.dataset.source = source
+      container.textContent = source
+      block.dataset.mermaidRendered = 'true'
+      pre.replaceWith(container)
+    }
+    return Array.from(document.querySelectorAll('.vela-mermaid'))
+  }
+
+  const renderMermaid = async () => {
+    const diagrams = prepareBlocks()
+    if (diagrams.length === 0) return
+    const { default: mermaid } = await import('mermaid')
+    const dark = document.documentElement.dataset.theme === 'dark'
+    mermaid.initialize({
+      startOnLoad: false,
+      securityLevel: 'strict',
+      theme: dark ? 'dark' : 'default',
+      themeVariables: {
+        primaryColor: dark ? '#131317' : '#f6f7f8',
+        primaryTextColor: dark ? '#f4f5f7' : '#0a0a0a',
+        primaryBorderColor: dark ? 'rgba(255,255,255,.16)' : 'rgba(10,10,10,.14)',
+        lineColor: dark ? '#9aa1ad' : '#5b6470',
+        fontFamily: 'var(--vela-font)',
+      },
+    })
+    await mermaid.run({ nodes: diagrams })
+  }
+
+  renderMermaid()
+
+  const observer = new MutationObserver(() => {
+    document.querySelectorAll('.vela-mermaid').forEach((node) => {
+      if (!(node instanceof HTMLElement)) return
+      node.removeAttribute('data-processed')
+      node.textContent = node.dataset.source ?? node.textContent ?? ''
+    })
+    renderMermaid()
+  })
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+</script>

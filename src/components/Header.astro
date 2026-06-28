@@ -1,0 +1,152 @@
+---
+import config from 'virtual:vela/config'
+import { Search, VersionSelect } from 'virtual:vela/components'
+import LanguageSelect from './LanguageSelect.astro'
+import ThemeSelect from './ThemeSelect.astro'
+import {
+  hrefForLink,
+  isActiveHref,
+  isExternalHref,
+  labelFor,
+  type VelaLocaleContext,
+  type VelaNavItem,
+} from '../utils/navigation'
+import { localizedUrl, type VelaRouteContext } from '../utils/routes'
+
+interface Props {
+  route: VelaRouteContext
+  entries?: any[]
+  hasSidebar?: boolean
+}
+
+const { route, entries = [], hasSidebar = true } = Astro.props
+const nav = Array.isArray(config.nav) ? config.nav : []
+const searchEnabled = config.search === true || (typeof config.search === 'object' && config.search.enabled !== false)
+const ctx: VelaLocaleContext = {
+  base: import.meta.env.BASE_URL.replace(/\/$/, ''),
+  currentPath: Astro.url.pathname,
+  locale: route.locale,
+  defaultLocale: config.defaultLocale,
+  lang: route.lang,
+}
+const homeHref = localizedUrl(route.locale === config.defaultLocale ? '' : route.locale)
+
+function navHref(item: VelaNavItem) {
+  return hrefForLink(item, ctx)
+}
+
+function isActiveItem(item: VelaNavItem) {
+  if (item.items?.length) return item.items.some(isActiveItem)
+  return isActiveHref(navHref(item), Astro.url.pathname)
+}
+---
+
+<header class="vela-header-shell">
+  <div class="vela-header">
+    <a class="vela-brand" href={homeHref}>
+      <span class="vela-brand__mark">{config.title.slice(0, 1)}</span>
+      <span>{config.title}</span>
+    </a>
+    {nav.length > 0 && (
+      <nav class="vela-top-nav print:hidden" aria-label="Primary">
+        {nav.map((item) => {
+          const children = item.items ?? []
+          if (children.length > 0) {
+            return (
+              <div class:list={['vela-nav-menu', { 'is-active': isActiveItem(item) }]}>
+                <button type="button" aria-haspopup="menu" aria-expanded="false">
+                  <span>{labelFor(item, ctx)}</span>
+                  <span class="vela-nav-menu__caret" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none">
+                      <path d="M5 7.5 10 12.5 15 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </span>
+                </button>
+                <div class="vela-nav-menu__panel" role="menu">
+                  {children.map((child) => {
+                    const href = navHref(child)
+                    const external = child.external || isExternalHref(href)
+                    return (
+                      <a
+                        href={href}
+                        role="menuitem"
+                        class:list={{ 'is-active': isActiveHref(href, Astro.url.pathname) }}
+                        target={external ? '_blank' : undefined}
+                        rel={external ? 'noreferrer' : undefined}
+                      >
+                        {labelFor(child, ctx)}
+                      </a>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          }
+          const href = navHref(item)
+          const external = item.external || isExternalHref(href)
+          return (
+            <a
+              href={href}
+              class:list={{ 'is-active': isActiveHref(href, Astro.url.pathname) }}
+              target={external ? '_blank' : undefined}
+              rel={external ? 'noreferrer' : undefined}
+            >
+              {labelFor(item, ctx)}
+            </a>
+          )
+        })}
+      </nav>
+    )}
+    <div class="vela-header-actions print:hidden">
+      {searchEnabled && <Search entries={entries} route={route} />}
+      <VersionSelect route={route} />
+      {config.social.map((item) => (
+        <a class="vela-icon-link" href={item.href} target="_blank" rel="noreferrer" aria-label={item.label}>
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2.16c-3.2.7-3.88-1.36-3.88-1.36-.52-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.25.45-2.28 1.18-3.08-.12-.29-.51-1.46.11-3.04 0 0 .97-.31 3.16 1.18a10.9 10.9 0 0 1 5.76 0c2.19-1.49 3.15-1.18 3.15-1.18.63 1.58.24 2.75.12 3.04.74.8 1.18 1.83 1.18 3.08 0 4.41-2.69 5.39-5.25 5.67.42.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z" />
+          </svg>
+        </a>
+      ))}
+      <ThemeSelect />
+      <LanguageSelect route={route} />
+    </div>
+    {hasSidebar && <button class="vela-mobile-toggle" type="button" aria-controls="vela-sidebar" aria-expanded="false">Menu</button>}
+  </div>
+</header>
+
+<script is:inline>
+  (() => {
+    const closeAll = () => {
+      document.querySelectorAll('.vela-nav-menu[data-open="true"]').forEach((menu) => {
+        menu.dataset.open = 'false';
+        menu.querySelector('button')?.setAttribute('aria-expanded', 'false');
+      });
+    };
+    document.querySelectorAll('.vela-nav-menu').forEach((menu) => {
+      if (menu.dataset.ready === 'true') return;
+      menu.dataset.ready = 'true';
+      const trigger = menu.querySelector('button');
+      trigger?.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const willOpen = menu.dataset.open !== 'true';
+        closeAll();
+        menu.dataset.open = willOpen ? 'true' : 'false';
+        trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      });
+    });
+    document.querySelector('.vela-mobile-toggle')?.addEventListener('click', (event) => {
+      const button = event.currentTarget;
+      const open = document.documentElement.dataset.sidebarOpen !== 'true';
+      document.documentElement.dataset.sidebarOpen = open ? 'true' : 'false';
+      button.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    document.addEventListener('click', closeAll);
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        closeAll();
+        document.documentElement.dataset.sidebarOpen = 'false';
+        document.querySelector('.vela-mobile-toggle')?.setAttribute('aria-expanded', 'false');
+      }
+    });
+  })();
+</script>

@@ -1,0 +1,30 @@
+---
+import type { VelaSidebarEntry } from '../utils/navigation';
+
+interface Props {
+  entries: VelaSidebarEntry[];
+  nested?: boolean;
+}
+
+const { entries, nested = false } = Astro.props;
+---
+
+<ul class:list={{ 'top-level': !nested }}>
+  {entries.map((entry) => (
+    <li>
+      {entry.type === 'link' ? (
+        <a href={entry.href} aria-current={entry.isCurrent ? 'page' : undefined} {...(entry.attrs ?? {})}>
+          <span>{entry.label}</span>
+        </a>
+      ) : (
+        <details open={(entry.entries ?? []).some((item) => item.isCurrent) || !entry.collapsed}>
+          <summary>
+            <span class="group-label"><span class="large">{entry.label}</span></span>
+            <span class="caret" aria-hidden="true">›</span>
+          </summary>
+          <Astro.self entries={entry.entries ?? []} nested />
+        </details>
+      )}
+    </li>
+  ))}
+</ul>

@@ -1,0 +1,65 @@
+---
+import config from 'virtual:vela/config'
+import { text } from '../utils/i18n'
+import type { VelaRouteContext } from '../utils/routes'
+
+interface Props {
+  route: VelaRouteContext
+}
+
+const { route } = Astro.props
+const versions = config.versions ?? []
+const current = versions[0]
+const accessibleLabel = text('version', route.lang)
+---
+
+{versions.length > 0 && (
+  <vela-version-select class="dux-menu vela-version" data-menu-kind="version">
+    <button class="dux-menu__trigger vela-version__trigger" type="button" aria-haspopup="menu" aria-expanded="false" aria-label={accessibleLabel}>
+      <span class="dux-menu__label vela-version__label">{current?.label ?? accessibleLabel}</span>
+      <span class="dux-menu__caret vela-version__caret" aria-hidden="true">
+        <svg viewBox="0 0 20 20" fill="none">
+          <path d="M5 7.5 10 12.5 15 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </span>
+    </button>
+    <div class="dux-menu__panel" role="menu" aria-label={accessibleLabel}>
+      {versions.map((version, index) => (
+        <a href={version.href} role="menuitemradio" aria-checked={index === 0 ? 'true' : 'false'}>
+          <span class="dux-menu__mark" aria-hidden="true"></span>
+          <span>{version.label}</span>
+        </a>
+      ))}
+    </div>
+  </vela-version-select>
+)}
+
+<script is:inline>
+  (() => {
+    const closeAll = () => {
+      document.querySelectorAll('vela-version-select[data-open="true"]').forEach((menu) => {
+        menu.dataset.open = 'false';
+        menu.querySelector('.dux-menu__trigger')?.setAttribute('aria-expanded', 'false');
+      });
+    };
+    class VelaVersionSelect extends HTMLElement {
+      connectedCallback() {
+        if (this.dataset.ready === 'true') return;
+        this.dataset.ready = 'true';
+        const trigger = this.querySelector('.dux-menu__trigger');
+        trigger?.addEventListener('click', (event) => {
+          event.stopPropagation();
+          const willOpen = this.dataset.open !== 'true';
+          closeAll();
+          this.dataset.open = willOpen ? 'true' : 'false';
+          trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+        });
+      }
+    }
+    if (!customElements.get('vela-version-select')) customElements.define('vela-version-select', VelaVersionSelect);
+    document.addEventListener('click', closeAll);
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeAll();
+    });
+  })();
+</script>

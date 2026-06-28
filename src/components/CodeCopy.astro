@@ -1,0 +1,42 @@
+---
+import { text } from '../utils/i18n'
+import type { VelaRouteContext } from '../utils/routes'
+
+interface Props {
+  route: VelaRouteContext
+}
+
+const { route } = Astro.props
+const copy = text('copy', route.lang)
+const copied = text('copied', route.lang)
+---
+
+<script is:inline define:vars={{ copy, copied }}>
+  (() => {
+    const enhance = () => {
+      document.querySelectorAll('.vela-markdown-content pre').forEach((pre) => {
+        if (pre.dataset.copyReady === 'true' || pre.querySelector('code.language-mermaid, code.mermaid')) return;
+        pre.dataset.copyReady = 'true';
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'vela-copy-code';
+        button.textContent = copy;
+        button.setAttribute('aria-label', copy);
+        button.addEventListener('click', async () => {
+          const text = pre.querySelector('code')?.textContent || '';
+          try {
+            await navigator.clipboard.writeText(text);
+            button.textContent = copied;
+            button.dataset.copied = 'true';
+            window.setTimeout(() => {
+              button.textContent = copy;
+              button.dataset.copied = 'false';
+            }, 1400);
+          } catch {}
+        });
+        pre.append(button);
+      });
+    };
+    enhance();
+  })();
+</script>

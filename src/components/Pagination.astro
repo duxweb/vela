@@ -1,0 +1,32 @@
+---
+import type { VelaSidebarEntry } from '../utils/navigation'
+import { text } from '../utils/i18n'
+import type { VelaRouteContext } from '../utils/routes'
+
+interface Props {
+  prev?: VelaSidebarEntry
+  next?: VelaSidebarEntry
+  route: VelaRouteContext
+}
+
+const { prev, next, route } = Astro.props
+const previousLabel = text('previous', route.lang)
+const nextLabel = text('next', route.lang)
+---
+
+{(prev || next) && (
+  <nav class="pagination-links print:hidden" aria-label="Pagination">
+    {prev ? (
+      <a href={prev.href} rel="prev">
+        <span aria-hidden="true">←</span>
+        <span>{previousLabel}<br /><span class="link-title">{prev.label}</span></span>
+      </a>
+    ) : <span />}
+    {next && (
+      <a href={next.href} rel="next">
+        <span aria-hidden="true">→</span>
+        <span>{nextLabel}<br /><span class="link-title">{next.label}</span></span>
+      </a>
+    )}
+  </nav>
+)}

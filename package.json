@@ -1,0 +1,74 @@
+{
+  "name": "@duxweb/vela",
+  "version": "0.1.0",
+  "description": "A clean Astro documentation framework for Dux projects.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./schema": {
+      "types": "./dist/schema.d.ts",
+      "default": "./dist/schema.js"
+    },
+    "./components/*": "./dist/components/*",
+    "./styles/*": "./dist/styles/*",
+    "./virtual": "./dist/virtual.d.ts"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "README.zh-CN.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs && tsc -p tsconfig.build.json",
+    "check": "tsc --noEmit",
+    "prepack": "pnpm build",
+    "build:example": "pnpm --dir examples/basic build"
+  },
+  "peerDependencies": {
+    "astro": ">=7.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.0.1",
+    "astro": "^7.0.2",
+    "esbuild": "^0.28.1",
+    "sharp": "^0.35.2",
+    "typescript": "^5.9.0"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "^7.0.0",
+    "mermaid": "^11.16.0"
+  },
+  "packageManager": "pnpm@10.31.0",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "astro",
+    "documentation",
+    "docs",
+    "theme",
+    "mdx"
+  ],
+  "homepage": "https://github.com/duxweb/vela#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/duxweb/vela.git"
+  },
+  "bugs": {
+    "url": "https://github.com/duxweb/vela/issues"
+  },
+  "sideEffects": [
+    "dist/**/*.astro",
+    "dist/styles/*.css"
+  ],
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

@@ -1,0 +1,14 @@
+---
+import SidebarTree from './SidebarTree.astro'
+import type { VelaSidebarEntry } from '../utils/navigation'
+
+interface Props {
+  entries: VelaSidebarEntry[]
+}
+
+const { entries } = Astro.props
+---
+
+<nav id="vela-sidebar" class="vela-sidebar-nav" aria-label="Documentation">
+  <SidebarTree entries={entries} />
+</nav>

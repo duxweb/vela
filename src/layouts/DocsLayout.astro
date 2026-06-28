@@ -1,0 +1,104 @@
+---
+import config from 'virtual:vela/config'
+import { Head, Header, Sidebar, Pagination, Hero, EditPage } from 'virtual:vela/components'
+import Mermaid from '../components/Mermaid.astro'
+import CodeCopy from '../components/CodeCopy.astro'
+import type { MarkdownHeading } from 'astro'
+import type { VelaSidebarEntry } from '../utils/navigation'
+import {
+  flattenSidebarEntries,
+  resolveSidebarItems,
+  selectDoc,
+  type VelaLocaleContext,
+} from '../utils/navigation'
+import { entryPath, shouldRenderHero, type VelaDocEntry, type VelaRouteContext } from '../utils/routes'
+
+interface Props {
+  entry: VelaDocEntry
+  entries: VelaDocEntry[]
+  entryMap: Map<string, VelaDocEntry>
+  headings: MarkdownHeading[]
+  route: VelaRouteContext
+}
+
+const { entry, entries, entryMap, headings, route } = Astro.props
+const base = import.meta.env.BASE_URL.replace(/\/$/, '')
+const localeCtx: VelaLocaleContext = {
+  base,
+  currentPath: Astro.url.pathname,
+  locale: route.locale,
+  defaultLocale: config.defaultLocale,
+  lang: route.lang,
+}
+const doc = selectDoc(config.docs, localeCtx)
+const sidebar = doc ? resolveSidebarItems(doc.sidebar, localeCtx) : []
+const links = flattenSidebarEntries(sidebar)
+const currentIndex = links.findIndex((item) => item.isCurrent)
+const prev = currentIndex > 0 ? links[currentIndex - 1] : undefined
+const next = currentIndex >= 0 && currentIndex < links.length - 1 ? links[currentIndex + 1] : undefined
+const hasHero = shouldRenderHero(entry, route.contentPath)
+const isDocumentPage = !hasHero && currentIndex >= 0
+const tocConfig = config.tableOfContents === false ? false : config.tableOfContents
+const minHeadingLevel = tocConfig ? tocConfig.minHeadingLevel ?? 2 : 99
+const maxHeadingLevel = tocConfig ? tocConfig.maxHeadingLevel ?? 3 : 0
+const toc = tocConfig
+  ? headings.filter((heading) => heading.depth >= minHeadingLevel && heading.depth <= maxHeadingLevel)
+  : []
+const mermaidEnabled = typeof config.mermaid === 'object'
+  ? config.mermaid.enabled !== false
+  : config.mermaid !== false
+
+const pageTitle = entry.data.title ? `${entry.data.title} · ${config.title}` : config.title
+const description = entry.data.description ?? config.description
+---
+
+<!doctype html>
+<html lang={route.lang} dir={route.dir} data-theme="light" data-has-hero={hasHero ? 'true' : undefined}>
+  <head>
+    <Head entry={entry} route={route} title={pageTitle} description={description} headings={headings} />
+  </head>
+  <body class:list={['vela-page', { 'vela-page--home': hasHero }]}>
+    <script is:inline>
+      (() => {
+        const key = 'vela-theme';
+        const value = localStorage.getItem(key) || 'auto';
+        const preferred = () => (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.dataset.theme = value === 'auto' ? preferred() : value;
+      })();
+    </script>
+    <Header route={route} entries={entries} hasSidebar={!hasHero} />
+    <div class:list={['vela-shell', { 'vela-shell--home': hasHero }]}>
+      {!hasHero && (
+        <aside class="vela-sidebar print:hidden">
+          <Sidebar entries={sidebar} route={route} />
+        </aside>
+      )}
+      <main class="vela-main">
+        {hasHero && <Hero entry={entry} route={route} />}
+        <article class="vela-content vela-markdown-content">
+          {!hasHero && (
+            <header class="vela-doc-header">
+              <h1>{entry.data.title}</h1>
+              {entry.data.description && <p>{entry.data.description}</p>}
+            </header>
+          )}
+          <slot />
+        </article>
+        {isDocumentPage && <EditPage entry={entry} route={route} />}
+        <Pagination prev={prev} next={next} route={route} />
+      </main>
+      {!hasHero && toc.length > 0 && (
+        <aside class="vela-toc print:hidden">
+          <div class="vela-toc__title">On this page</div>
+          <nav aria-label="Table of contents">
+            {toc.map((heading) => (
+              <a class={`depth-${heading.depth}`} href={`#${heading.slug}`}>{heading.text}</a>
+            ))}
+          </nav>
+        </aside>
+      )}
+    </div>
+    {mermaidEnabled && <Mermaid />}
+    <CodeCopy route={route} />
+  </body>
+</html>

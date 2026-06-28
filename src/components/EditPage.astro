@@ -1,0 +1,73 @@
+---
+import config from 'virtual:vela/config'
+import { statSync } from 'node:fs'
+import { text, translated } from '../utils/i18n'
+import type { VelaDocEntry, VelaRouteContext } from '../utils/routes'
+
+interface Props {
+  entry: VelaDocEntry
+  route: VelaRouteContext
+}
+
+const { entry, route } = Astro.props
+const edit = config.editLink
+let href = entry.data.editUrl
+let label = text('editPage', route.lang)
+const updatedDate = resolveUpdatedDate(entry)
+const updatedLabel = updatedDate
+  ? `${text('updated', route.lang)} ${formatDate(updatedDate, route.lang)}`
+  : undefined
+
+if (!href && edit) {
+  if (typeof edit === 'string') {
+    href = edit
+  } else {
+    label = translated(edit, route.lang) || edit.label || label
+    href = edit.pattern
+  }
+  href = href
+    ?.replaceAll(':path', entry.filePath ?? `src/content/docs/${entry.id}.mdx`)
+    .replaceAll(':id', entry.id)
+    .replaceAll(':locale', route.locale)
+    .replaceAll(':slug', route.slug)
+}
+
+function resolveUpdatedDate(doc: VelaDocEntry): Date | undefined {
+  const value = doc.data.lastUpdated || doc.data.updated
+  if (value instanceof Date) return value
+  if (typeof value === 'string' && value.trim()) {
+    const date = new Date(value)
+    if (!Number.isNaN(date.getTime())) return date
+  }
+  if (!doc.filePath) return undefined
+  try {
+    return statSync(doc.filePath).mtime
+  } catch {
+    return undefined
+  }
+}
+
+function formatDate(date: Date, lang: string): string {
+  return new Intl.DateTimeFormat(lang || 'en', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date)
+}
+---
+
+{(href || updatedLabel) && (
+  <div class="vela-doc-meta print:hidden">
+    <div>
+      {href && (
+        <a class="vela-edit-link" href={href} target="_blank" rel="noreferrer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          <span>{label}</span>
+        </a>
+      )}
+    </div>
+    {updatedLabel && <time datetime={updatedDate?.toISOString()}>{updatedLabel}</time>}
+  </div>
+)}

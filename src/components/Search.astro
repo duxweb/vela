@@ -1,0 +1,97 @@
+---
+import { searchPlaceholder, text } from '../utils/i18n'
+import type { VelaDocEntry, VelaRouteContext } from '../utils/routes'
+import { entryPath, localeFromSlug, localizedUrl } from '../utils/routes'
+
+interface Props {
+  entries: VelaDocEntry[]
+  route: VelaRouteContext
+}
+
+const { entries, route } = Astro.props
+const placeholder = searchPlaceholder(route.lang)
+const label = text('search', route.lang)
+const noResults = text('noResults', route.lang)
+const index = entries.filter((entry) => localeFromSlug(entryPath(entry)) === route.locale).map((entry) => {
+  const title = entry.data.title ?? (entryPath(entry) || 'Overview')
+  const description = entry.data.description ?? ''
+  const body = (entry.body ?? '').replace(/```[\s\S]*?```/g, ' ').replace(/[#*_`>\-[\]()]/g, ' ').replace(/\s+/g, ' ').trim()
+  return {
+    title,
+    description,
+    href: localizedUrl(entryPath(entry)),
+    text: `${title} ${description} ${body}`.toLowerCase(),
+  }
+})
+---
+
+<vela-search class="vela-search" data-index={JSON.stringify(index)} data-no-results={noResults}>
+  <button class="vela-search__button" type="button" aria-label={label}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <span>{placeholder}</span>
+    <kbd>/</kbd>
+  </button>
+  <div class="vela-search__dialog" role="dialog" aria-modal="true" aria-label={label}>
+    <div class="vela-search__panel">
+      <div class="vela-search__field">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="search" placeholder={placeholder} aria-label={placeholder} />
+      </div>
+      <div class="vela-search__results" role="listbox"></div>
+    </div>
+  </div>
+</vela-search>
+
+<script is:inline>
+  (() => {
+    class VelaSearch extends HTMLElement {
+      connectedCallback() {
+        if (this.dataset.ready === 'true') return;
+        this.dataset.ready = 'true';
+        const button = this.querySelector('.vela-search__button');
+        const dialog = this.querySelector('.vela-search__dialog');
+        const input = this.querySelector('input');
+        const results = this.querySelector('.vela-search__results');
+        const index = JSON.parse(this.dataset.index || '[]');
+        const noResults = this.dataset.noResults || 'No results';
+        const open = () => {
+          this.dataset.open = 'true';
+          requestAnimationFrame(() => input?.focus());
+          render('');
+        };
+        const close = () => {
+          this.dataset.open = 'false';
+          input.value = '';
+        };
+        const render = (query) => {
+          const words = query.toLowerCase().trim().split(/\s+/).filter(Boolean);
+          const matches = words.length === 0
+            ? index.slice(0, 8)
+            : index
+                .map((item) => ({ item, score: words.reduce((score, word) => score + (item.text.includes(word) ? 1 : 0), 0) }))
+                .filter((row) => row.score > 0)
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 12)
+                .map((row) => row.item);
+          results.innerHTML = matches.length
+            ? matches.map((item) => `<a role="option" href="${item.href}"><strong>${escapeHTML(item.title)}</strong>${item.description ? `<span>${escapeHTML(item.description)}</span>` : ''}</a>`).join('')
+            : `<div class="vela-search__empty">${escapeHTML(noResults)}</div>`;
+        };
+        button?.addEventListener('click', open);
+        dialog?.addEventListener('click', (event) => {
+          if (event.target === dialog) close();
+        });
+        input?.addEventListener('input', () => render(input.value));
+        document.addEventListener('keydown', (event) => {
+          if (event.key === '/' && !/input|textarea|select/i.test(document.activeElement?.tagName || '')) {
+            event.preventDefault();
+            open();
+          }
+          if (event.key === 'Escape') close();
+        });
+      }
+    }
+    const escapeHTML = (value) => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
+    if (!customElements.get('vela-search')) customElements.define('vela-search', VelaSearch);
+  })();
+</script>
