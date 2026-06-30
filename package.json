@@ -1,6 +1,6 @@
 {
   "name": "@duxweb/vela",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A clean Astro documentation framework for Dux projects.",
   "type": "module",
   "main": "./dist/index.js",

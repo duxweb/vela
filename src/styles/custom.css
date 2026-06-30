@@ -324,7 +324,23 @@ a { color: inherit; }
 
 .vela-sidebar-nav ul { list-style: none; margin: 0; padding: 0; }
 .vela-sidebar-nav li { margin: 0; }
-.vela-sidebar-nav details { margin: 1.15rem 0 0; }
+.vela-sidebar-nav .top-level {
+  display: grid;
+  gap: 0;
+}
+.vela-sidebar-nav .top-level > li {
+  min-width: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--dux-line) 72%, transparent);
+  padding: 1.05rem 0;
+}
+.vela-sidebar-nav .top-level > li:first-child {
+  padding-top: 0;
+}
+.vela-sidebar-nav .top-level > li:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.vela-sidebar-nav details { margin: 0; }
 .vela-sidebar-nav details:first-child { margin-top: 0; }
 .vela-sidebar-nav summary {
   display: flex;
@@ -332,16 +348,19 @@ a { color: inherit; }
   justify-content: space-between;
   color: var(--dux-muted);
   cursor: pointer;
-  font-size: var(--dux-fs-xs);
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  font-size: var(--dux-fs-sm);
+  font-weight: 700;
+  letter-spacing: 0;
   list-style: none;
-  padding: 0.35rem 0.4rem;
-  text-transform: uppercase;
+  padding: 0.15rem 0.55rem 0.65rem;
 }
 .vela-sidebar-nav summary::-webkit-details-marker { display: none; }
 .vela-sidebar-nav .caret { opacity: 0.6; transform: rotate(90deg); transition: transform 0.14s ease; }
 .vela-sidebar-nav details:not([open]) .caret { transform: rotate(0); }
+.vela-sidebar-nav details > ul {
+  display: grid;
+  gap: 0.12rem;
+}
 .vela-sidebar-nav a {
   display: flex;
   align-items: center;
@@ -469,6 +488,11 @@ a { color: inherit; }
 .vela-home-features strong { font-size: var(--dux-fs-sm); }
 .vela-home-features span { color: var(--dux-muted); font-size: var(--dux-fs-sm); line-height: 1.55; }
 
+.vela-shell:not(.vela-shell--home) .vela-main > .vela-content.vela-markdown-content {
+  font-size: var(--dux-fs-md);
+  line-height: 1.75;
+}
+
 .vela-markdown-content :is(h1, h2, h3) { letter-spacing: -0.03em; color: var(--dux-ink); line-height: 1.25; }
 .vela-markdown-content h1 { margin: 0 0 1rem; font-size: var(--dux-fs-xl); }
 .vela-markdown-content h2 { margin: 3rem 0 1rem; font-size: var(--dux-fs-lg); }
@@ -518,7 +542,14 @@ a { color: inherit; }
   border: 1px solid var(--dux-line);
   font-size: 0.92rem;
 }
-.vela-markdown-content thead th { background: var(--dux-surface); color: var(--dux-ink); font-weight: 650; text-align: left; }
+.vela-shell:not(.vela-shell--home) .vela-main > .vela-content.vela-markdown-content table { font-size: 0.95rem; }
+.vela-markdown-content thead th {
+  background: var(--dux-surface);
+  color: var(--dux-ink);
+  font-size: var(--dux-fs-sm);
+  font-weight: 650;
+  text-align: left;
+}
 .vela-markdown-content :is(th, td) {
   border: 0;
   border-bottom: 1px solid var(--dux-line);

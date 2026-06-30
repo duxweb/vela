@@ -19,7 +19,7 @@ const { entries, nested = false } = Astro.props;
       ) : (
         <details open={(entry.entries ?? []).some((item) => item.isCurrent) || !entry.collapsed}>
           <summary>
-            <span class="group-label"><span class="large">{entry.label}</span></span>
+            <span class="group-label">{entry.label}</span>
             <span class="caret" aria-hidden="true">›</span>
           </summary>
           <Astro.self entries={entry.entries ?? []} nested />
